@@ -60,6 +60,7 @@ class KNearestNeighbor(object):
       is the Euclidean distance between the ith test point and the jth training
       point.
     """
+    print('Here')
     num_test = X.shape[0]
     num_train = self.X_train.shape[0]
     dists = np.zeros((num_test, num_train))
@@ -71,7 +72,8 @@ class KNearestNeighbor(object):
         # training point, and store the result in dists[i, j]. You should   #
         # not use a loop over dimension.                                    #
         #####################################################################
-        pass
+        dists[i][j] = np.sqrt(np.sum((X[i] - self.X_train[j])**2))
+#         print("i:{}, j:{}, dists[i][j]:{}".format(i,j,dists[i][j]))
         #####################################################################
         #                       END OF YOUR CODE                            #
         #####################################################################
@@ -93,7 +95,7 @@ class KNearestNeighbor(object):
       # Compute the l2 distance between the ith test point and all training #
       # points, and store the result in dists[i, :].                        #
       #######################################################################
-      pass
+      dists[i] = np.sqrt(np.sum(((X[i] - self.X_train)**2), axis=1))
       #######################################################################
       #                         END OF YOUR CODE                            #
       #######################################################################
@@ -121,7 +123,15 @@ class KNearestNeighbor(object):
     # HINT: Try to formulate the l2 distance using matrix multiplication    #
     #       and two broadcast sums.                                         #
     #########################################################################
-    pass
+    
+    # Very slow
+    #X = X[:, np.newaxis, :] # create a 3D array where X[0] is first row maxtrix and so on
+    
+    #dists = np.sqrt(np.sum((X-self.X_train)**2, axis=2))
+    
+    # Use rule (a-b)^2 = a^2 + b^2-2ab
+
+    dists = np.sqrt(np.sum(X**2, axis=1)[:,np.newaxis] + np.sum(self.X_train**2,axis=1) - 2*np.dot(X, self.X_train.T))
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
@@ -142,6 +152,9 @@ class KNearestNeighbor(object):
     """
     num_test = dists.shape[0]
     y_pred = np.zeros(num_test)
+    
+    # temp = self.y_train(np.argsort(dists, axis = 1))[:,0:k] - fancy indexing numpy, returns shape as that of indices
+
     for i in range(num_test):
       # A list of length k storing the labels of the k nearest neighbors to
       # the ith test point.
@@ -153,7 +166,8 @@ class KNearestNeighbor(object):
       # neighbors. Store these labels in closest_y.                           #
       # Hint: Look up the function numpy.argsort.                             #
       #########################################################################
-      pass
+      
+      closest_y = (self.y_train[np.argsort(dists[i,:])][0:k]).tolist()
       #########################################################################
       # TODO:                                                                 #
       # Now that you have found the labels of the k nearest neighbors, you    #
@@ -161,10 +175,26 @@ class KNearestNeighbor(object):
       # Store this label in y_pred[i]. Break ties by choosing the smaller     #
       # label.                                                                #
       #########################################################################
-      pass
+      temp = {}
+      for j in closest_y:
+        if j in temp:
+            temp[j] += 1
+        else:
+            temp[j] = 1
+      k_sm  = float('inf')
+      v = -float('inf')
+      for key, val in temp.items():
+            if val > v:
+                k_sm = key
+                v = val
+            elif val == v and k_sm > key:
+                k_sm = key
+            else:
+                pass
+      y_pred[i] = (k_sm)
+        
       #########################################################################
       #                           END OF YOUR CODE                            # 
       #########################################################################
-
     return y_pred
 
