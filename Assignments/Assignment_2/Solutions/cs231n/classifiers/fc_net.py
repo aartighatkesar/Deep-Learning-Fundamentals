@@ -195,6 +195,22 @@ class FullyConnectedNet(object):
             self.params[wkey] = weight_scale * normal_init(temp[i], temp[i+1])
             self.params[bkey] = np.zeros(temp[i+1])
 #             print("shape {}:{}, {}:{}".format(wkey, self.params[wkey].shape, bkey, self.params[bkey].shape))
+
+        if self.normalization:
+            for i, hd in enumerate(hidden_dims):
+                gkey = "gamma{}".format(i+1)
+                btkey = "beta{}".format(i+1)
+                self.params[gkey] = np.ones(hd)
+                self.params[btkey] = np.zeros(hd)
+#                 print("hidden:{},shape {}:{}, {}:{}".format(hd, gkey, self.params[gkey].shape, btkey, self.params[btkey].shape))
+                        
+        if self.normalization:
+            # Get fcn handle
+            self.norm_fcn_forward = globals()["{}_forward".format(self.normalization)]
+            print("fcn_fwd:{}".format(self.norm_fcn_forward))
+            self.norm_fcn_backward = globals()["{}_backward_alt".format(self.normalization)]
+            print("fcn_bkwd:{}".format(self.norm_fcn_backward))
+                                      
            
 
         ############################################################################
@@ -263,7 +279,12 @@ class FullyConnectedNet(object):
             if i == 1:
                 out = X
             if i != self.num_layers:
-                out, cache[i] = affine_relu_forward(out, self.params[wkey], self.params[bkey])
+                if not self.normalization:
+                    out, cache[i] = affine_relu_forward(out, self.params[wkey], self.params[bkey])
+                else:
+                    gkey = "gamma{}".format(i)
+                    btkey = "beta{}".format(i)
+                    out, cache[i] = affine_norm_relu_forward(out, self.params[wkey], self.params[bkey], self.params[gkey], self.params[btkey], self.bn_params[i-1], self.norm_fcn_forward) 
             else:
                 scores, cache[i] = affine_forward(out, self.params[wkey], self.params[bkey])
             
@@ -301,7 +322,12 @@ class FullyConnectedNet(object):
                 # Last layer was just affine
                 dinp, grads[wkey], grads[bkey] = affine_backward(dL, cache[i])
             else:
-                dinp, grads[wkey], grads[bkey] = affine_relu_backward(dinp, cache[i])
+                if not self.normalization:
+                    dinp, grads[wkey], grads[bkey] = affine_relu_backward(dinp, cache[i])
+                else:
+                    gkey = "gamma{}".format(i)
+                    btkey = "beta{}".format(i)
+                    dinp, grads[wkey], grads[bkey], grads[gkey], grads[btkey] = affine_norm_relu_backward(dinp, cache[i], self.norm_fcn_backward)
                 
             grads[wkey] += self.reg * self.params[wkey]
             
@@ -311,3 +337,17 @@ class FullyConnectedNet(object):
         ############################################################################
 
         return loss, grads
+    
+def affine_norm_relu_forward(x, w, b, gamma, beta, bn_param, norm_fcn_forward):
+    out, fc_cache = affine_forward(x, w, b)
+    out, norm_cache = norm_fcn_forward(out, gamma, beta, bn_param)
+    out, relu_cache = relu_forward(out)
+    cache = (fc_cache, norm_cache, relu_cache)
+    return out, cache
+
+def affine_norm_relu_backward(dout, cache, norm_fcn_backward):
+    fc_cache, norm_cache, relu_cache = cache
+    dout = relu_backward(dout, relu_cache)
+    dout, dgamma, dbeta = norm_fcn_backward(dout, norm_cache)
+    dx, dw, db = affine_backward(dout, fc_cache)
+    return dx, dw, db, dgamma, dbeta

@@ -268,8 +268,8 @@ def batchnorm_backward(dout, cache):
     dx = dnorm_data*1/np.sqrt(sample_var+eps) + 1/N * dsample_mean +  dsample_var * 2/N * (x - sample_mean)
     
     
-    print(dx)
-    print('----')
+    #print(dx)
+    #print('----')
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -314,7 +314,7 @@ def batchnorm_backward_alt(dout, cache):
     
     dx = dnorm_data * N - np.sum(dnorm_data, axis=0) - norm_data * np.sum(dnorm_data*norm_data, axis=0)
     dx = 1/(N*np.sqrt(sample_var+eps)) * dx
-    print(dx)
+    #print(dx)
     
     
 
@@ -359,14 +359,21 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # transformations you could perform, that would enable you to copy over   #
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
-    pass
+    dim_mean = np.mean(x, axis=1, keepdims=True) # N x 1.
+    dim_var = np.mean((x - dim_mean)**2, axis=1, keepdims=True) # (NxD - Nx1)->NxD ->keepdims ->Nx1
+
+    norm_data = (x - dim_mean)/np.sqrt(dim_var + eps)
+
+    out = norm_data * gamma + beta
+    
+    cache = (x, gamma, beta, eps, norm_data)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return out, cache
 
 
-def layernorm_backward(dout, cache):
+def layernorm_backward_alt(dout, cache):
     """
     Backward pass for layer normalization.
 
@@ -390,7 +397,24 @@ def layernorm_backward(dout, cache):
     # implementation of batch normalization. The hints to the forward pass    #
     # still apply!                                                            #
     ###########################################################################
-    pass
+    x, gamma, beta, eps, norm_data = cache
+    N, D = x.shape
+    
+    dgamma = np.sum((dout * norm_data), axis=0) # (D,)
+    dbeta = np.sum(dout, axis=0) # (D,)
+    
+    dnorm_data = dout*gamma # (NxD)
+    
+    dim_mean = np.mean(x, axis=1, keepdims=True) # N x 1.
+    dim_var = np.mean((x - dim_mean)**2, axis=1, keepdims=True) # (NxD - Nx1)->NxD ->keepdims ->Nx1
+    
+    dx = D*dnorm_data - np.sum(dnorm_data, axis=1, keepdims=True) - norm_data*np.sum(dnorm_data*norm_data, axis=1, keepdims=True)
+    
+    dx = 1/(D*np.sqrt(dim_var+eps)) * dx
+    
+
+    
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
