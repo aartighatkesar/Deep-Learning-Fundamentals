@@ -212,11 +212,11 @@ class FullyConnectedNet(object):
             print("fcn_bkwd:{}".format(self.norm_fcn_backward))
                                       
            
-
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
 
+        
         # When using dropout we need to pass a dropout_param dictionary to each
         # dropout layer so that the layer knows the dropout probability and the mode
         # (train / test). You can pass the same dropout_param to each dropout layer.
@@ -280,11 +280,17 @@ class FullyConnectedNet(object):
                 out = X
             if i != self.num_layers:
                 if not self.normalization:
-                    out, cache[i] = affine_relu_forward(out, self.params[wkey], self.params[bkey])
+                    out, cache_aff = affine_relu_forward(out, self.params[wkey], self.params[bkey])
                 else:
                     gkey = "gamma{}".format(i)
                     btkey = "beta{}".format(i)
-                    out, cache[i] = affine_norm_relu_forward(out, self.params[wkey], self.params[bkey], self.params[gkey], self.params[btkey], self.bn_params[i-1], self.norm_fcn_forward) 
+                    out, cache_aff = affine_norm_relu_forward(out, self.params[wkey], self.params[bkey], self.params[gkey], self.params[btkey], self.bn_params[i-1], self.norm_fcn_forward) 
+                 
+                cache_drop = None
+                if self.use_dropout:
+                    out, cache_drop = dropout_forward(out, self.dropout_param)
+                cache[i] = (cache_aff, cache_drop)
+                   
             else:
                 scores, cache[i] = affine_forward(out, self.params[wkey], self.params[bkey])
             
@@ -322,12 +328,15 @@ class FullyConnectedNet(object):
                 # Last layer was just affine
                 dinp, grads[wkey], grads[bkey] = affine_backward(dL, cache[i])
             else:
+                cache_aff, cache_drop = cache[i]
+                if cache_drop:
+                    dinp = dropout_backward(dinp, cache_drop)
                 if not self.normalization:
-                    dinp, grads[wkey], grads[bkey] = affine_relu_backward(dinp, cache[i])
+                    dinp, grads[wkey], grads[bkey] = affine_relu_backward(dinp, cache_aff)
                 else:
                     gkey = "gamma{}".format(i)
                     btkey = "beta{}".format(i)
-                    dinp, grads[wkey], grads[bkey], grads[gkey], grads[btkey] = affine_norm_relu_backward(dinp, cache[i], self.norm_fcn_backward)
+                    dinp, grads[wkey], grads[bkey], grads[gkey], grads[btkey] = affine_norm_relu_backward(dinp, cache_aff, self.norm_fcn_backward)
                 
             grads[wkey] += self.reg * self.params[wkey]
             
