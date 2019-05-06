@@ -558,7 +558,7 @@ def conv_forward_naive(x, w, b, conv_param):
     out_W = int(1 + (W + 2 * pad - WW) / stride)
     
     out = np.zeros((N, F, out_H, out_W))
-    print('here')
+#     print('here')
     
     while i + int(np.ceil(HH/2)) <= H + 2*pad:
         
@@ -603,7 +603,86 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
-    pass
+    
+    x, w, b, conv_param = cache
+    
+    N, C, H, W = x.shape
+    F, _, HH, WW = w.shape
+    
+    
+    pad = conv_param.get('pad', 0)
+    
+    stride = conv_param.get('stride', 1)
+    
+    i = int(np.floor(HH/2))
+    j = int(np.floor(WW/2))
+    
+    x1 = np.pad(x, ((0,0),(0,0),(pad,pad),(pad,pad)), 'constant')
+    
+    dw = np.zeros(w.shape)
+    
+    i = int(np.floor(HH/2))
+    j = int(np.floor(WW/2))
+    
+    out_i = 0
+    out_j = 0
+    
+    out_H = int(1 + (H + 2 * pad - HH) / stride)
+    out_W = int(1 + (W + 2 * pad - WW) / stride)
+    
+    ### dw ###
+    for f in range(F):
+        print("f={}".format(f))
+        i = int(np.floor(HH/2))
+        j = int(np.floor(WW/2))
+    
+        out_i = 0
+        out_j = 0
+        while i + int(np.ceil(HH/2)) <= H + 2*pad:
+
+            while j + int(np.ceil(WW/2)) <= W+2*pad:
+                temp_x = x1[:, :, i-int(np.floor(HH/2)):i+int(np.ceil(HH/2)), j-int(np.floor(WW/2)):j+int(np.ceil(WW/2))]
+                temp = dout[:, f, out_i, out_j]
+                temp = temp[:,np.newaxis, np.newaxis, np.newaxis]
+#                 print("temp shape:{}".format(temp.shape))
+#                 print("dw shape:{}".format(dw[[f],:,:,:].shape))
+#                 print("temp_x shape:{}".format(temp_x.shape))
+                dw[[f],:,:,:] += np.sum(temp * temp_x, axis=0, keepdims=True)
+                j = j+ stride
+                out_j = out_j + 1
+            
+            i = i + stride
+            out_i += 1
+            out_j = 0
+            j = int(np.floor(WW/2))
+            
+    print("dw = {}".format(dw))     
+       
+    
+    
+    #### db ####
+    
+    db = np.sum(dout, axis=(0,2,3)) # dout has shape N, F, H', W'
+    print("db= {}".format(db))
+    print(db.shape)
+            
+        
+    #### dx ####
+    
+                
+                
+        
+   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
