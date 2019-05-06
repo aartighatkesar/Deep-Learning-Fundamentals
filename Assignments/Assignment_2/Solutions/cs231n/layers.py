@@ -632,7 +632,7 @@ def conv_backward_naive(dout, cache):
     
     ### dw ###
     for f in range(F):
-        print("f={}".format(f))
+#         print("f={}".format(f))
         i = int(np.floor(HH/2))
         j = int(np.floor(WW/2))
     
@@ -664,24 +664,51 @@ def conv_backward_naive(dout, cache):
     
     db = np.sum(dout, axis=(0,2,3)) # dout has shape N, F, H', W'
     print("db= {}".format(db))
-    print(db.shape)
+#     print(db.shape)
             
         
     #### dx ####
     
-                
-                
+    dx = np.zeros(x.shape)
+    
+    dx1 = np.pad(dx, ((0,0),(0,0),(pad,pad),(pad,pad)), 'constant')
+    
+    i = int(np.floor(HH/2))
+    j = int(np.floor(WW/2))
+    
+    out_i = 0
+    out_j = 0
+    
+    out_H = int(1 + (H + 2 * pad - HH) / stride)
+    out_W = int(1 + (W + 2 * pad - WW) / stride)
+    
+    while i + int(np.ceil(HH/2)) <= H + 2*pad:
+
+        while j + int(np.ceil(WW/2)) <= W+2*pad:
+            
+            temp = dout[:,:, out_i, out_j] # N, F
+            temp = temp[:,:, np.newaxis, np.newaxis, np.newaxis] # N, F, 1, 1, 1
+            
+            temp_dx = dx1[:, :, i-int(np.floor(HH/2)):i+int(np.ceil(HH/2)), j-int(np.floor(WW/2)):j+int(np.ceil(WW/2))]
+            
+            temp = temp * w[np.newaxis, :] # shape output temp = N, F, C, HH, WW; w shape: 1, F, C, HH, WW
+            temp = np.sum(temp, axis=1) # along F axis.
+            
+            temp_dx += temp
+
+            j = j+ stride
+            out_j = out_j + 1
+
+        i = i + stride
+        out_i += 1
+        out_j = 0
+        j = int(np.floor(WW/2)) 
         
-   
+    _,_, H1, W1 = dx1.shape
     
+    dx = dx1[:,:, pad:H1-pad, pad:W1-pad]
     
-    
-    
-    
-    
-    
-    
-    
+    print("dx={}".format(dx))
     
     ###########################################################################
     #                             END OF YOUR CODE                            #
