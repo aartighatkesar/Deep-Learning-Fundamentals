@@ -656,14 +656,14 @@ def conv_backward_naive(dout, cache):
             out_j = 0
             j = int(np.floor(WW/2))
             
-    print("dw = {}".format(dw))     
+#     print("dw = {}".format(dw))     
        
     
     
     #### db ####
     
     db = np.sum(dout, axis=(0,2,3)) # dout has shape N, F, H', W'
-    print("db= {}".format(db))
+#     print("db= {}".format(db))
 #     print(db.shape)
             
         
@@ -708,7 +708,7 @@ def conv_backward_naive(dout, cache):
     
     dx = dx1[:,:, pad:H1-pad, pad:W1-pad]
     
-    print("dx={}".format(dx))
+#     print("dx={}".format(dx))
     
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -873,7 +873,28 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # vanilla version of batch normalization you implemented above.           #
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
-    pass
+    
+    # From the arXiv paper, the batch size would be B = m*p*q, i.e along all 
+    # spatial dimension and training examples N. So is we have a size of N x C x H x W
+    # We need to pick each channel from every N and reshape it into a column vector
+    # So our final matrix as input to vanilla batch norm would be (N*H*W) x C
+    N, C, H, W = x.shape
+    x = x.reshape(N, C, -1) # output size : N, C, H*W
+    x = np.concatenate(x, axis=1) # N training examples are grouped , out size: C x (N*H*W)
+    x = x.T
+    
+    out, cache = batchnorm_forward(x, gamma, beta, bn_param) # out size (N*H*W) x C
+    
+    # Have to reshape out to N x C x H X W
+    
+    out = np.split(out, N, axis=0) # out will now be a "N" length list with shape (H*W) X C
+    out = [x.T.reshape(C, H, W) for x in out] # each entry in out list will now be a C X H X W numpy array
+    
+    out = np.stack(out) # stacks arrays along axis 0, so final out will have shape N x C x H x W
+    
+    
+    
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -903,7 +924,27 @@ def spatial_batchnorm_backward(dout, cache):
     # vanilla version of batch normalization you implemented above.           #
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
-    pass
+    # From the arXiv paper, the batch size would be B = m*p*q, i.e along all 
+    # spatial dimension and training examples m. So is we have a size of N x C x H x W
+    # We need to pick each channel from every N and reshape it into a column vector
+    # So our final matrix as input to vanilla batch norm would be (N*H*W) x C
+    N, C, H, W = dout.shape
+    dout = dout.reshape(N, C, -1) # output size : N, C, H*W
+    dout = np.concatenate(dout, axis=1) # N training examples are grouped , out size: C x (N*H*W)
+    dout = dout.T
+    
+    dx, dgamma, dbeta = batchnorm_backward_alt(dout, cache) #  dx size (N*H*W) x C
+    
+    # Have to reshape out to N x C x H X W
+    
+    dx = np.split(dx, N, axis=0) # dx will now be a "N" length list with shape (H*W) X C
+    dx = [val.T.reshape(C, H, W) for val in dx] # each entry in out list will now be a C X H X W numpy array
+    
+    dx = np.stack(dx) # stacks arrays along axis 0, so final out will have shape N x C x H x W
+    
+    
+    
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
