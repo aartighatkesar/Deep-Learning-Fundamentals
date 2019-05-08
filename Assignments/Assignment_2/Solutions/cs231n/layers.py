@@ -739,7 +739,39 @@ def max_pool_forward_naive(x, pool_param):
     ###########################################################################
     # TODO: Implement the max-pooling forward pass                            #
     ###########################################################################
-    pass
+    N, C, H, W = x.shape
+    ph = pool_param.get('pool_height', 3)
+    pw = pool_param.get('pool_width', 3)
+    stride = pool_param.get('stride', 2)
+    
+    out_H = int(1 + (H - ph)/ stride)
+    out_W = int(1 + (W - pw)/ stride)
+    
+    i = 0
+    j = 0
+    out_i = 0
+    out_j = 0
+    
+    out = np.zeros((N, C, out_H, out_W))
+    
+    while i + ph <= H:
+        while j + pw <= W:
+            # Two ways of accessing the data in the array.
+            # Mixing integer indexing with slices yields an array of lower rank,
+            # while using only slices yields an array of the same rank as the
+            # original array:
+            
+            out[:,:,out_i:out_i+1,out_j:out_j+1] = np.amax(x[:,:, i: i+ph, j:j+pw], axis=(2,3), keepdims=True)
+            j += stride
+            out_j += 1
+            
+        i += stride
+        out_i += 1
+        out_j = 0
+        j = 0
+        
+            
+            
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -762,7 +794,48 @@ def max_pool_backward_naive(dout, cache):
     ###########################################################################
     # TODO: Implement the max-pooling backward pass                           #
     ###########################################################################
-    pass
+    x, pool_param = cache
+    
+    N, C, H, W = x.shape
+    ph = pool_param.get('pool_height', 3)
+    pw = pool_param.get('pool_width', 3)
+    stride = pool_param.get('stride', 2)
+    
+    dx = np.zeros(x.shape)
+    
+    _, _, out_H, out_W = dout.shape
+    
+    out_i = 0
+    out_j = 0
+    i = 0
+    j = 0
+    while i + ph <= H:
+        while j + pw <= W:
+            # Two ways of accessing the data in the array.
+            # Mixing integer indexing with slices yields an array of lower rank,
+            # while using only slices yields an array of the same rank as the
+            # original array:
+            
+            temp = np.amax(x[:,:, i: i+ph, j:j+pw], axis=(2,3), keepdims=True) == x[:,:, i:i+ph, j:j+pw]
+#             print(temp.shape)
+#             print(dx.shape)
+#             print('---')
+#             print(temp*dout[:,:, out_i:out_i+1, out_j:out_j+1])
+#             print('---')
+#             print(dx[:,:,i:i+ph, j:j+ph])
+#             print("i:{}, j:{}".format(i,j))
+
+            dx[:,:, i:i+ph, j:j+pw] +=  temp * dout[:,:, out_i:out_i+1, out_j:out_j+1]
+            
+            j += stride
+            out_j += 1
+        
+        i += stride
+        j = 0
+        
+        out_i += 1
+        out_j = 0
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
