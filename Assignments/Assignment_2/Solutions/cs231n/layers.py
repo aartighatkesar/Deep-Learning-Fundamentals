@@ -359,12 +359,18 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # transformations you could perform, that would enable you to copy over   #
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
+    
+#     print("x shape:{}".format(x.shape))
+#     print("gamma shape:{}".format(gamma.shape))
+#     print("beta shape:{}".format(beta.shape))
+    
     dim_mean = np.mean(x, axis=1, keepdims=True) # N x 1.
     dim_var = np.mean((x - dim_mean)**2, axis=1, keepdims=True) # (NxD - Nx1)->NxD ->keepdims ->Nx1
 
     norm_data = (x - dim_mean)/np.sqrt(dim_var + eps)
 
     out = norm_data * gamma + beta
+#     print("out shape:{}".format(out.shape))
     
     cache = (x, gamma, beta, eps, norm_data)
     ###########################################################################
@@ -980,7 +986,27 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     # the bulk of the code is similar to both train-time batch normalization  #
     # and layer normalization!                                                # 
     ###########################################################################
-    pass
+    N, C, H, W = x.shape
+    out = np.zeros(x.shape)
+    num_it = int(C/G)
+#     print("num_it:{}".format(num_it))
+    cache = {}
+    for i in range(G):
+        temp_inp = x[:,i*num_it:(i+1)*num_it,:,:] # shape -> N x num_it x H x W
+        temp_inp = temp_inp.reshape(N, -1)
+        
+        # check np.repeat. Repeats each element. Since while rehaping, the all HxW from channel1 
+        # and arranged after HxW from channel2, we need to scale and shift them by appropriate 
+        # gamma and beta
+        temp, cache[i] = layernorm_forward(temp_inp, gamma[i*num_it:(i+1)*num_it].repeat(H*W), 
+                                           beta[i*num_it:(i+1)*num_it].repeat(H*W), gn_param)
+        out[:, i*num_it:(i+1)*num_it,:,:] = temp.reshape(N, -1, H, W)
+        
+    cache["G"] = G
+    cache["x"] = x
+    cache["gamma"] = gamma
+    cache["beta"] = beta
+        
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -1006,7 +1032,37 @@ def spatial_groupnorm_backward(dout, cache):
     # TODO: Implement the backward pass for spatial group normalization.      #
     # This will be extremely similar to the layer norm implementation.        #
     ###########################################################################
-    pass
+    N, C, H, W = dout.shape
+    
+    G = cache["G"]
+    x = cache["x"]
+    gamma = cache["gamma"]
+    beta = cache["beta"]
+    
+    num_it = int(C/G)
+    
+    dx = np.zeros(dout.shape)
+    dgamma = np.zeros(gamma.shape)
+    dbeta = np.zeros(beta.shape)
+    
+    for i in range(G):
+        dout_bk = dout[:, i*num_it:(i+1)*num_it, :,:]
+        dout_bk = dout_bk.reshape(N, -1)
+#         x, gamma, beta, eps, norm_data = cache[i]
+        
+        dx_temp, dgamma_temp, dbeta_temp = layernorm_backward_alt(dout_bk, cache[i])
+        
+        dx[:,i*num_it:(i+1)*num_it, :,:] = dx_temp.reshape(N, -1, H, W)
+        
+        dgamma_temp = dgamma_temp.reshape(num_it, -1)
+        dgamma_temp = np.sum(dgamma_temp, axis=1)
+        dgamma[i*num_it:(i+1)*num_it] = dgamma_temp
+        
+        dbeta_temp = dbeta_temp.reshape(num_it, -1)
+        dbeta_temp = np.sum(dbeta_temp, axis=1)
+        dbeta[i*num_it:(i+1)*num_it] = dbeta_temp
+        
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
