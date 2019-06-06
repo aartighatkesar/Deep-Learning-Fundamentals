@@ -36,7 +36,8 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    next_h = np.tanh(np.dot(prev_h, Wh) + np.dot(x, Wx) + b)
+    cache = prev_h, Wh, Wx, b, x, next_h
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -68,8 +69,20 @@ def rnn_step_backward(dnext_h, cache):
     # of the output value from tanh.                                             #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    prev_h, Wh, Wx, b, x, next_h = cache
+    
+    dtanh = (1 - next_h*next_h)*dnext_h # shape dtanh = N x H
+        
+    db = np.sum(dtanh, axis=0)
+    
+    dWh = np.dot(prev_h.T, dtanh)
+    
+    dprev_h = np.dot(dtanh, Wh.T)
+    
+    dWx = np.dot(x.T, dtanh)
+    
+    dx = np.dot(dtanh, Wx.T)
+    
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -103,8 +116,14 @@ def rnn_forward(x, h0, Wx, Wh, b):
     # above. You can use a for loop to help compute the forward pass.            #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    prev_h = h0
+    cache = {}
+    N, T, D = x.shape
+    _, H = h0.shape
+    h = np.zeros((N, T, H))
+    for i in range(T):
+        prev_h, cache[i] = rnn_step_forward(x[:, i, :], prev_h, Wx, Wh, b)
+        h[:,i,:] = prev_h
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -140,7 +159,27 @@ def rnn_backward(dh, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, T, H = dh.shape
+    dprev_h = np.zeros((N,H))
+    
+    for i in range(T-1, -1, -1):
+        # Read the NOTE. The gradients for states "h" flow from two places, one from the output y and thus loss and then next 
+        # is from the hprev calculation and thus have to be summed up before backprop into Wh, Wx etc
+        dx_step, dprev_h, dWx_step, dWh_step, db_step = rnn_step_backward(dprev_h + dh[:, i, :], cache[i])
+        if i == T-1:
+            dx = dx_step[:, np.newaxis, :]
+            dWx = dWx_step
+            dWh = dWh_step
+            db = db_step
+            
+        else:
+            dx = np.concatenate((dx_step[:, np.newaxis, :], dx), axis=1)
+            dWx += dWx_step
+            dWh += dWh_step
+            db += db_step
+     
+    dh0 = dprev_h
+        
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -171,8 +210,10 @@ def word_embedding_forward(x, W):
     # HINT: This can be done in one line using NumPy's array indexing.           #
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    # Refer here 
+    # https://docs.scipy.org/doc/numpy/user/quickstart.html?highlight=fancy#fancy-indexing-and-index-tricks
+    out = W[x]
+    cache = W, x
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -205,7 +246,10 @@ def word_embedding_backward(dout, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    W, x = cache
+    dW = np.zeros(W.shape)
+    
+    np.add.at(dW, x, dout)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################

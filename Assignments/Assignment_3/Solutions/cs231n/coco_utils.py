@@ -11,7 +11,9 @@ def load_coco_data(base_dir=BASE_DIR,
     data = {}
     caption_file = os.path.join(base_dir, 'coco2014_captions.h5')
     with h5py.File(caption_file, 'r') as f:
+        print("in load_coco_data: f.keys:{}".format(list(f.keys())))
         for k, v in f.items():
+            print("in load_coco_data: k:{}, v:{}".format(k,v))
             data[k] = np.asarray(v)
 
     if pca_features:
