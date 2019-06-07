@@ -158,7 +158,12 @@ class CaptioningRNN(object):
         #     process the sequence of input word vectors and produce hidden state  
         #     vectors for all timesteps, producing an array of shape (N, T, H). 
         
-        h, cache_rnn = rnn_forward(embed_captions, h0, Wx, Wh, b)
+        if self.cell_type == 'rnn':
+            h, cache_cell = rnn_forward(embed_captions, h0, Wx, Wh, b)
+            
+        else:
+            h, cache_cell = lstm_forward(embed_captions, h0, Wx, Wh, b)
+            
         
         # (4) Use a (temporal) affine transformation to compute scores over the    
         #     vocabulary at every timestep using the hidden states, giving an      
@@ -172,11 +177,19 @@ class CaptioningRNN(object):
         loss, dscores = temporal_softmax_loss(scores, captions_out, mask, verbose=False)
         
         
-        ############### BACKWARD PASS #####################
+        ############### BACKWARD PROPAGATION #####################
         
         dh, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dscores, cache_temp_aff)
         
-        dembed_captions_in, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, cache_rnn)
+        if self.cell_type == 'rnn':
+        
+            dembed_captions_in, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, cache_cell)
+            
+        else:
+            
+            dembed_captions_in, dh0, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(dh, cache_cell)
+            
+            
         
         grads['W_embed'] = word_embedding_backward(dembed_captions_in, cache_embed)
         
@@ -254,6 +267,11 @@ class CaptioningRNN(object):
         
         ## Initial set-up
         
+        # For LSTM: Initial cell state
+        H, _ = Wh.shape
+        prev_c = np.zeros((N, H))
+        
+        
         # Pass image to set up initial hidden state
         prev_h, _ = affine_forward(features, W_proj, b_proj)
         
@@ -266,7 +284,13 @@ class CaptioningRNN(object):
         
         for t in range(max_length):
             
-            prev_h, _ = rnn_step_forward(np.squeeze(x), prev_h, Wx, Wh, b)
+            if self.cell_type == 'rnn':
+            
+                prev_h, _ = rnn_step_forward(np.squeeze(x), prev_h, Wx, Wh, b)
+            else:
+                
+                prev_h, prev_c, _ = lstm_step_forward(np.squeeze(x), prev_h, prev_c, Wx, Wh, b)
+                
             
             scores, _ = affine_forward(prev_h, W_vocab, b_vocab)
             
