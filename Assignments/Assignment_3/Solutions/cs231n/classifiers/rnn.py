@@ -141,8 +141,62 @@ class CaptioningRNN(object):
         # in your implementation, if needed.                                       #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+        
+        ############### FORWARD PASS #####################
 
-        pass
+        # (1) Use an affine transformation to compute the initial hidden state     
+        #     from the image features. This should produce an array of shape (N, H)
+        
+        h0, cache_aff_fwd = affine_forward(features, W_proj, b_proj)# W_proj -> D x H , h0->N x H
+        
+        # (2) Use a word embedding layer to transform the words in captions_in     
+        #     from indices to vectors, giving an array of shape (N, T, W).
+        
+        embed_captions, cache_embed = word_embedding_forward(captions_in, W_embed)
+        
+        # (3) Use either a vanilla RNN or LSTM (depending on self.cell_type) to    
+        #     process the sequence of input word vectors and produce hidden state  
+        #     vectors for all timesteps, producing an array of shape (N, T, H). 
+        
+        if self.cell_type == 'rnn':
+            h, cache_cell = rnn_forward(embed_captions, h0, Wx, Wh, b)
+            
+        else:
+            h, cache_cell = lstm_forward(embed_captions, h0, Wx, Wh, b)
+            
+        
+        # (4) Use a (temporal) affine transformation to compute scores over the    
+        #     vocabulary at every timestep using the hidden states, giving an      
+        #     array of shape (N, T, V).
+        
+        scores, cache_temp_aff = temporal_affine_forward(h, W_vocab, b_vocab)
+        
+        # (5) Use (temporal) softmax to compute loss using captions_out, ignoring  
+        #     the points where the output word is <NULL> using the mask above. 
+        
+        loss, dscores = temporal_softmax_loss(scores, captions_out, mask, verbose=False)
+        
+        
+        ############### BACKWARD PROPAGATION #####################
+        
+        dh, grads['W_vocab'], grads['b_vocab'] = temporal_affine_backward(dscores, cache_temp_aff)
+        
+        if self.cell_type == 'rnn':
+        
+            dembed_captions_in, dh0, grads['Wx'], grads['Wh'], grads['b'] = rnn_backward(dh, cache_cell)
+            
+        else:
+            
+            dembed_captions_in, dh0, grads['Wx'], grads['Wh'], grads['b'] = lstm_backward(dh, cache_cell)
+            
+            
+        
+        grads['W_embed'] = word_embedding_backward(dembed_captions_in, cache_embed)
+        
+        dfeatures, grads['W_proj'], grads['b_proj'] = affine_backward(dh0, cache_aff_fwd)
+        
+        
+  
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -210,8 +264,41 @@ class CaptioningRNN(object):
         # you are using an LSTM, initialize the first cell state to zeros.        #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        
+        ## Initial set-up
+        
+        # For LSTM: Initial cell state
+        H, _ = Wh.shape
+        prev_c = np.zeros((N, H))
+        
+        
+        # Pass image to set up initial hidden state
+        prev_h, _ = affine_forward(features, W_proj, b_proj)
+        
+#         print("prev_h shape:{}".format(prev_h.shape))
+        
+        # Set up initial <start> vector to be passed to RNN
+        x, _ = word_embedding_forward(self._start*np.ones((N, 1), dtype=np.int32), W_embed)
+        
+#         print("x shape:{}".format(x.shape))
+        
+        for t in range(max_length):
+            
+            if self.cell_type == 'rnn':
+            
+                prev_h, _ = rnn_step_forward(np.squeeze(x), prev_h, Wx, Wh, b)
+            else:
+                
+                prev_h, prev_c, _ = lstm_step_forward(np.squeeze(x), prev_h, prev_c, Wx, Wh, b)
+                
+            
+            scores, _ = affine_forward(prev_h, W_vocab, b_vocab)
+            
+            captions[:, t] = np.argmax(scores, axis=1) 
+            
+            x, _ = word_embedding_forward(captions[:, t:t+1], W_embed)
+            
+            
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
