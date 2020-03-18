@@ -1,6 +1,6 @@
 # Deep Learning Fundamentals
 
-Find the implementations at the following hyperlinks. 
+Find implementations at the following hyperlinks. 
 
 1. [K - Nearest Neighbour with cross validation](./Assignments/Assignment_1/Solutions/cs231n/classifiers/k_nearest_neighbor.py)
  
@@ -20,7 +20,7 @@ Find the implementations at the following hyperlinks.
 
       * [Convolution Layer Forward Pass Implementation](./Assignments/Assignment_2/Solutions/cs231n/layers.py#L515)
       
-      * [Convolution Layer Forward Pass Implementation](./Assignments/Assignment_2/Solutions/cs231n/layers.py#L595)
+      * [Convolution Layer Backward Pass Implementation](./Assignments/Assignment_2/Solutions/cs231n/layers.py#L595)
       
  
 9.  Batch Normalization:
@@ -65,5 +65,6 @@ Find the implementations at the following hyperlinks.
     * [RMSProp](./Assignments/Assignment_2/Solutions/cs231n/optim.py#L79)
         
     * [ADAM](./Assignments/Assignment_2/Solutions/cs231n/optim.py#L115)
+    
     
 15. 
