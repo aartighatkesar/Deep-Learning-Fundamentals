@@ -82,9 +82,9 @@ Find implementations at the following hyperlinks.
 
     <br/>
     <br/>
-    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_1.png" alt="Pic_28.jpg"/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_1.png" alt="Pic_28.jpg" width="323" height="532"/>
     <br/>
-    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_2.png" alt="Pic_28.jpg"/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_2.png" alt="Pic_28.jpg" width="323" height="532"/>
     <br/>
-    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_3.png" alt="Pic_28.jpg"/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_3.png" alt="Pic_28.jpg" width="323" height="532"/>
     <br/>
