@@ -64,7 +64,27 @@ Find implementations at the following hyperlinks.
         
     * [RMSProp](./Assignments/Assignment_2/Solutions/cs231n/optim.py#L79)
         
-    * [ADAM](./Assignments/Assignment_2/Solutions/cs231n/optim.py#L115)
+    * [Adam](./Assignments/Assignment_2/Solutions/cs231n/optim.py#L115)
     
     
-15. 
+15. [Saliency Maps](./Assignments/Assignment_3/Solutions/NetworkVisualization-TensorFlow.ipynb)
+    
+    <br/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/Saliency_maps.png" alt="Pic_28.jpg"/>
+    <br/>
+16. [Adverserial Examples](./Assignments/Assignment_3/Solutions/NetworkVisualization-TensorFlow.ipynb)
+    <br/>
+    <br/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/adverserial_examples.png" alt="Pic_28.jpg"/>
+    <br/>
+    
+17. [Network Visualization](./Assignments/Assignment_3/Solutions/NetworkVisualization-TensorFlow.ipynb)
+
+    <br/>
+    <br/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_1.png" alt="Pic_28.jpg"/>
+    <br/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_2.png" alt="Pic_28.jpg"/>
+    <br/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_3.png" alt="Pic_28.jpg"/>
+    <br/> 
