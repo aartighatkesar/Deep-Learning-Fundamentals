@@ -72,6 +72,7 @@ Find implementations at the following hyperlinks.
     <br/>
     <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/Saliency_maps.png" alt="Pic_28.jpg"/>
     <br/>
+    
 16. [Adverserial Examples](./Assignment_3/Solutions/NetworkVisualization-TensorFlow.ipynb)
     <br/>
     <br/>
@@ -86,5 +87,14 @@ Find implementations at the following hyperlinks.
     <br/>
     <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_2.png" alt="Pic_28.jpg" width="323" height="532"/>
     <br/>
-    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_3.png" alt="Pic_28.jpg" width="323" height="532"/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/network_vis_3.png" alt="Pic_28.jpg" />
+    <br/>
+    
+18. [Style Transfer](./Assignment_3/Solutions/StyleTransfer-TensorFlow.ipynb)
+
+    <br/>
+    <br/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/style_transfer_1.png" alt="Pic_28.jpg" width="323" height="532"/>
+    <br/>
+    <img src="https://github.com/aartighatkesar/Deep-Learning-Fundamentals/blob/master/readme_imgs/style_transfer_2.png" alt="Pic_28.jpg" width="323" height="532"/>
     <br/>
